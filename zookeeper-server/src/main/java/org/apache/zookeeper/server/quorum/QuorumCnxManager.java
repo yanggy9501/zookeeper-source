@@ -70,10 +70,11 @@ import static org.apache.zookeeper.common.NetUtils.formatInetAddr;
  * when consolidating peer communication. This is to be verified, though.
  *
  * 选举的数据管理器: 负责每台服务器之间的底层 Leader 选举过程中的网络通信，类似于ServerCnxn
- * 1.选举前创建好QuorumCnxManager实例，并在QuorumCnxManager构造函数中创建好Listener实例
- * 2.调用Listener.start()方法启动监听线程
- * 3.Listener获得CPU资源后执行run()方法，建立ListenerHandler，开始监听来自其他服务器的连接请求
- * 4.当ListenerHandler监听到来自其他服务器的连接请求，创建当前服务器与目标服务器一对一的SendWorker和RecvWorker，并将SendWorker保存到QuorumCnxManager.senderWorkerMap中
+ *
+ * 1.选举前创建好 QuorumCnxManager 实例，并在 QuorumCnxManager 构造函数中创建好 Listener 实例
+ * 2.调用 Listener#start()方法启动监听线程
+ * 3.Listener 获得CPU资源后执行 run() 方法，建立 ListenerHandler，开始监听来自其他服务器的连接请求
+ * 4.当 ListenerHandler 监听到来自其他服务器的连接请求，创建当前服务器与目标服务器一对一的 SendWorker 和 RecvWorker，并将SendWorker保存到 QuorumCnxManager.senderWorkerMap 中
  * 5.进行选举的时候会向集群中的所有服务器发送自己的选票，通过QuorumCnxManager.toSend()方法向QuorumCnxManager.queueSendMap中存放待发送的信息，等待SendWorker异步发送
  * 6.在QuorumCnxManager.toSend()中会检测senderWorkerMap中是否存在目标服务器的发送线程SendWorker，如果不存在则调用connectOne()方法创建连接，connectOne()中会创建QuorumConnectionReqThread线程并将其放入connectionExecutor线程池中异步建立连接
  * 7.当QuorumConnectionReqThread获得CPU资源后执行run()方法，接着调用QuorumCnxManager.initiateConnection()方法进行连接，连接建立成功后创建一对一的SendWorker和RecvWorker，并将SendWorker保存到QuorumCnxManager.senderWorkerMap中
@@ -676,7 +677,7 @@ public class QuorumCnxManager {
     }
 
     /**
-     * 存放待发送的信息，等待 SendWorker异步发送
+     * 存放待发送的信息，等待 SendWorker 异步发送，注意不是 WorkerSender
      *
      * Processes invoke this message to queue a message to send. Currently,
      * only leader election uses it.

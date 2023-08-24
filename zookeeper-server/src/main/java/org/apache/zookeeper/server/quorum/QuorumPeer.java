@@ -1355,9 +1355,10 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
             // 发送，接收选票的监听（应用层发送监听）
             QuorumCnxManager.Listener listener = qcm.listener;
             if (listener != null) {
+                // 连接监听器的监听线程启动
                 listener.start();
                 FastLeaderElection fle = new FastLeaderElection(this, qcm);
-                // 投票收 + 发（传输层发送接收）
+                // 启动 WorkerSender和 WorkerReceiver 线程，处理选票的收发
                 fle.start();
                 le = fle;
             } else {
