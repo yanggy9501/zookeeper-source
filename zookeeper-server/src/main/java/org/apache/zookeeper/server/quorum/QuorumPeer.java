@@ -1559,8 +1559,9 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                     try {
                         // create Leader 类，leader 类也是一个线程
                         setLeader(makeLeader(logFactory));
-                        // core
+                        // 执行 Leader 的工作
                         leader.lead();
+                        // leader 无效，更新为 null，重新选举
                         setLeader(null);
                     } catch (Exception e) {
                         LOG.warn("Unexpected exception", e);

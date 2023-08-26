@@ -18,23 +18,16 @@
 
 package org.apache.zookeeper.server.quorum;
 
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import javax.management.JMException;
 import org.apache.zookeeper.KeeperException.SessionExpiredException;
 import org.apache.zookeeper.jmx.MBeanRegistry;
 import org.apache.zookeeper.metrics.MetricsContext;
-import org.apache.zookeeper.server.ContainerManager;
-import org.apache.zookeeper.server.DataTreeBean;
-import org.apache.zookeeper.server.FinalRequestProcessor;
-import org.apache.zookeeper.server.PrepRequestProcessor;
-import org.apache.zookeeper.server.Request;
-import org.apache.zookeeper.server.RequestProcessor;
-import org.apache.zookeeper.server.ServerCnxn;
-import org.apache.zookeeper.server.ServerMetrics;
-import org.apache.zookeeper.server.ZKDatabase;
+import org.apache.zookeeper.server.*;
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
+
+import javax.management.JMException;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  *
@@ -42,6 +35,8 @@ import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
  * processors: PrepRequestProcessor -&gt; ProposalRequestProcessor -&gt;
  * CommitProcessor -&gt; Leader.ToBeAppliedRequestProcessor -&gt;
  * FinalRequestProcessor
+ *
+ * LeaderZooKeeperServer 定义了一系列 Processor 用于处理请求
  */
 public class LeaderZooKeeperServer extends QuorumZooKeeperServer {
 

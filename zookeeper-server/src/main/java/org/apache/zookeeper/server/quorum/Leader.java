@@ -88,6 +88,9 @@ public class Leader extends LearnerMaster {
 
     final LeaderZooKeeperServer zk;
 
+    /**
+     * QuorumPeer zk 服务
+     */
     final QuorumPeer self;
 
     // VisibleForTesting
@@ -255,7 +258,7 @@ public class Leader extends LearnerMaster {
     }
 
     /**
-     * 所有的集群节点
+     * 当前 zk 的通信的 ServerSocket
      */
     private final List<ServerSocket> serverSockets = new LinkedList<>();
 
@@ -263,6 +266,7 @@ public class Leader extends LearnerMaster {
         this.self = self;
         this.proposalStats = new BufferStats();
 
+        // 获取当前服务器地址列表，如server.1=127.0.0.1:2888:3888，需要开启一个zk多地址，需要配置 zookeeper.multiAddress.enable,否则只有一个地址
         Set<InetSocketAddress> addresses;
         if (self.getQuorumListenOnAllIPs()) {
             addresses = self.getQuorumAddress().getWildcardAddresses();
@@ -291,6 +295,7 @@ public class Leader extends LearnerMaster {
             } else {
                 serverSocket = new ServerSocket();
             }
+            // 绑定（监听端口）地址
             serverSocket.setReuseAddress(true);
             serverSocket.bind(address);
             return Optional.of(serverSocket);
@@ -554,6 +559,13 @@ public class Leader extends LearnerMaster {
 
     /**
      * This method is main function that is called to lead
+     * 工作如下：
+     * 1.加载本地数据，包括session和data
+     * 2.启动LearnerCnxAcceptor，该过程会创建与集群中所有learner服务器的连接，该连接用于learner服务器的请求通信。连接建立后会进行一系列的初始化工作，包括确认epoch、确认新leader、leader与learner的数据同步，初始化工作完成后开始监听工作，监听所有来自learner服务器的请求。
+     * 3.等待learner确认选举轮次epoch，第2步建立连接后leader会向learner服务器发送epoch信息
+     * 4.等待集群 learner确认leader，第2步建立连接后会向learner服务器发送新leader的信息
+     * 5.启动LeaderZookeeperServer
+     * 6.执行leader的工作，包括定期检查Leader资格、向learner发送ping
      *
      * @throws IOException
      * @throws InterruptedException
