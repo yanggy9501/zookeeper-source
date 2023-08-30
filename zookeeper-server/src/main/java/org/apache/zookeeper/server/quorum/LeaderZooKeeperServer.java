@@ -36,7 +36,6 @@ import java.util.function.Function;
  * CommitProcessor -&gt; Leader.ToBeAppliedRequestProcessor -&gt;
  * FinalRequestProcessor
  *
- * LeaderZooKeeperServer 定义了一系列 Processor 用于处理请求
  */
 public class LeaderZooKeeperServer extends QuorumZooKeeperServer {
 

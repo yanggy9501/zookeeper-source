@@ -679,7 +679,7 @@ public class Leader extends LearnerMaster {
                 }
                 return;
             }
-
+            // 启动 zookeeper
             startZkServer();
 
             /**
@@ -1533,6 +1533,7 @@ public class Leader extends LearnerMaster {
         }
 
         leaderStartTime = Time.currentElapsedTime();
+        // 启动 LeaderZooKeeperServer
         zk.startup();
         /*
          * Update the election vote here to ensure that all members of the

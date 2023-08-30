@@ -68,6 +68,8 @@ import java.util.function.BiConsumer;
  * This class implements a simple standalone ZooKeeperServer. It sets up the
  * following chain of RequestProcessors to process requests:
  * PrepRequestProcessor -&gt; SyncRequestProcessor -&gt; FinalRequestProcessor
+ *
+ * zk 服务，ZooKeeperServer主要是设置了一系列Processor处理器，对于不同的服务器角色有不同的实例类型
  */
 public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
@@ -487,17 +489,21 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
          * See ZOOKEEPER-1642 for more detail.
          */
         if (zkDb.isInitialized()) {
+            // 如果 zkDb 已经初始化，则直接获取dataTree 的上一次 zxid，更新到 hzxid
             setZxid(zkDb.getDataTreeLastProcessedZxid());
         } else {
+            // 否则加载完成后这种 hzxid
             setZxid(zkDb.loadDataBase());
         }
 
         // Clean up dead sessions
+        // 获取没有时限的 session，关闭超时的 session
         zkDb.getSessions().stream()
                         .filter(session -> zkDb.getSessionWithTimeOuts().get(session) == null)
                         .forEach(session -> killSession(session, zkDb.getDataTreeLastProcessedZxid()));
 
         // Make a clean snapshot
+        // 打快照
         takeSnapshot();
     }
 
@@ -681,11 +687,14 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
 
     private void startupWithServerState(State state) {
         if (sessionTracker == null) {
+            // 创建 SessionTracker
             createSessionTracker();
         }
+        // 启动 SessionTracker
         startSessionTracker();
+        // 设置请求处理器，勇气处理请求
         setupRequestProcessors();
-
+        // 设置请求限流器
         startRequestThrottler();
 
         registerJMX();

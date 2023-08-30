@@ -18,19 +18,18 @@
 
 package org.apache.zookeeper.server.quorum;
 
+import org.apache.zookeeper.jmx.MBeanRegistry;
+import org.apache.zookeeper.server.*;
+import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
-import org.apache.zookeeper.jmx.MBeanRegistry;
-import org.apache.zookeeper.server.DataTreeBean;
-import org.apache.zookeeper.server.ServerCnxn;
-import org.apache.zookeeper.server.SyncRequestProcessor;
-import org.apache.zookeeper.server.ZKDatabase;
-import org.apache.zookeeper.server.ZooKeeperServerBean;
-import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
 
 /**
  * Parent class for all ZooKeeperServers for Learners
+ *
+ * 其子类有 FollowerZooKeeperServer 和 ObserverZooKeeperServer
  */
 public abstract class LearnerZooKeeperServer extends QuorumZooKeeperServer {
 
