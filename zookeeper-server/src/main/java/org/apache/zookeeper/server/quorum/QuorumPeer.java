@@ -1118,7 +1118,8 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         } catch (AdminServerException e) {
             LOG.warn("Problem starting AdminServer", e);
         }
-        // leader 选举开始，第一步设置当前投票 leader 为自己，创建选举算法做选举准备
+        // leader 选举开始，第一步设置当前投票 leader 为自己
+        // 创建选举算法做选举，收发选票的线程准备，监听集群连接的监听器准备
         startLeaderElection();
         startJvmPauseMonitor();
         // 启动选举，QuorumPeer 也是一个线程， -> 看 run 方法，其将当前选票发送给集群中的其他机器
@@ -1538,11 +1539,13 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                         }
                     }
                     break;
-                // 经过选举投票后，following 状态处理，与 leader 连接，数据同步，写请求转发给 leader 处理等等（与 leader 连接）
+                // 经过选举投票后，该节点成为 follower 的 following 状态处理，与 leader 连接，数据同步，写请求转发给 leader 处理等等（与 leader 连接）
                 case FOLLOWING:
                     try {
                         LOG.info("FOLLOWING");
+                        // 创建 FOLLOWING 和设置服务器状态为 FOLLOWING
                         setFollower(makeFollower(logFactory));
+                        // follower 的工作
                         follower.followLeader();
                     // leader 宕机了，follower 收不到 leader 的“心跳”，就会抛出异常最终走 finally 修改状态重新选举，重新 while 循环
                     } catch (Exception e) {

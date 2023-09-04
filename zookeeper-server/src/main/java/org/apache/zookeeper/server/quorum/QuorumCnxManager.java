@@ -780,10 +780,9 @@ public class QuorumCnxManager {
     }
 
     /**
-     * Try to establish a connection with each server if one
-     * doesn't exist.
+     * Try to establish a connection with each server if one doesn't exist.
+     * 尝试和每台 zk 服务建立连接
      */
-
     public void connectAll() {
         long sid;
         for (Enumeration<Long> en = queueSendMap.keys(); en.hasMoreElements(); ) {

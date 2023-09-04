@@ -42,6 +42,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * This class has the control logic for the Follower.
+ * Leader 的 Follower
  */
 public class Follower extends Learner {
 
@@ -86,11 +87,13 @@ public class Follower extends Learner {
 
         try {
             self.setZabState(QuorumPeer.ZabState.DISCOVERY);
+            // 获取 leader
             QuorumServer leaderServer = findLeader();
             try {
                 // 建立与 leader 的连接
                 connectToLeader(leaderServer.addr, leaderServer.hostname);
                 connectionTime = System.currentTimeMillis();
+                // 向 leader 发送 FOLLOWERINFO 信息
                 long newEpochZxid = registerWithLeader(Leader.FOLLOWERINFO);
                 if (self.isReconfigStateChange()) {
                     throw new Exception("learned about role change");
@@ -108,6 +111,7 @@ public class Follower extends Learner {
                 long startTime = Time.currentElapsedTime();
                 self.setLeaderAddressAndId(leaderServer.addr, leaderServer.getId());
                 self.setZabState(QuorumPeer.ZabState.SYNCHRONIZATION);
+                // 与 leader 进行数据同步
                 syncWithLeader(newEpochZxid);
                 self.setZabState(QuorumPeer.ZabState.BROADCAST);
                 completedSync = true;

@@ -550,6 +550,7 @@ public class FastLeaderElection implements Election {
                          **/
                         ToSend m = sendqueue.poll(3000, TimeUnit.MILLISECONDS);
                         if (m == null) {
+                            // 这里有限时长等待 + continue，因为可以持续的 while 判断(stop)线程是否结束了
                             continue;
                         }
 
@@ -797,7 +798,6 @@ public class FastLeaderElection implements Election {
      *
      * Check if a pair (server id, zxid) succeeds our
      * current vote.
-     *
      */
     protected boolean totalOrderPredicate(long newId, long newZxid, long newEpoch, long curId, long curZxid, long curEpoch) {
         LOG.debug(
@@ -1045,7 +1045,7 @@ public class FastLeaderElection implements Election {
                  * Remove next notification from queue, times out after 2 times
                  * the termination time
                  *
-                 * 获取收到的选票信息：拉取消息，收取其他节点发送的选票消息，接收线程负责收其他机器的投票消息并放入队列.
+                 * 获取收到的选票信息：拉取消息，收取其他节点发送的选票消息(也包括自己给自己的)，接收线程负责收其他机器的投票消息并放入队列.
                  * @see org.apache.zookeeper.server.quorum.QuorumCnxManager.RecvWorker#run()
                  * @see org.apache.zookeeper.server.quorum.QuorumCnxManager#addToRecvQueue(org.apache.zookeeper.server.quorum.QuorumCnxManager.Message)
                  */
@@ -1055,13 +1055,13 @@ public class FastLeaderElection implements Election {
                  * Sends more notifications if haven't received enough.
                  * Otherwise processes new notification.
                  */
-                // 如果未收到任何选票则重新发送投票
+                // 如果未收到任何选票
                 if (n == null) {
                     // 确认服务器是否保持着有效连接
                     if (manager.haveDelivered()) {
                         sendNotifications();
                     } else {
-                        // 否则重新建立连接
+                        // 建立连接，连接集群中的其他 zk 服务
                         manager.connectAll();
                     }
 
@@ -1096,11 +1096,11 @@ public class FastLeaderElection implements Election {
                     switch (n.state) {
                     // 对方zk服务器还在选举状态，进行pk
                     /**
-                     * 1.首先比较选举轮次epoch，如果外部投票的选举轮次低于内部投票则丢弃外部投票
-                     * 2.如果外部投票的选举轮次高于内部投票，则更新内部选举轮次，然后再继续PK投票决定是否更新内部推举的leader信息
-                     * 3.一致的话直接PK投票
-                     * 4.投票PK结束后进行汇总
-                     * 5.投票统计结束后，如果此时已经产生leader，则更新当前服务器装填
+                     * 1.首先比较选举轮次 epoch，如果外部投票的选举轮次低于内部投票则丢弃外部投票
+                     * 2.如果外部投票的选举轮次高于内部投票，则更新内部选举轮次，然后再继续 PK 投票决定是否更新内部推举的 leader信息
+                     * 3.一致的话直接 PK 投票
+                     * 4.投票 PK 结束后进行汇总
+                     * 5.投票统计结束后，如果此时已经产生 leader，则更新当前服务器装填
                      */
                     case LOOKING:
                         if (getInitLastLoggedZxid() == -1) {
@@ -1113,9 +1113,9 @@ public class FastLeaderElection implements Election {
                         }
                         // If notification > current, replace and send messages out
                         // 比较选举周期
-                        // 当期服务器的选举轮次低于投票选举 leader 的选举轮次，则
+                        // 当前服务器的选举轮次低于收到的投票的选举轮次，则
                         if (n.electionEpoch > logicalclock.get()) {
-                            // 跟新本地的选举轮次
+                            // 更新本地的选举轮次
                             logicalclock.set(n.electionEpoch);
                             // 清空所有已经收到的无效投票
                             recvset.clear();
@@ -1153,7 +1153,7 @@ public class FastLeaderElection implements Election {
                         // don't care about the version if it's in LOOKING state
                         // 将所有机器发过来的选票进行保存，半数以上选出 leader
                         recvset.put(n.sid, new Vote(n.leader, n.zxid, n.electionEpoch, n.peerEpoch));
-                        // 获取 SyncedLearnerTracker
+                        // 获取 SyncedLearnerTracker，以判断是否半数以上结束选举
                         voteSet = getVoteTracker(recvset, new Vote(proposedLeader, proposedZxid, logicalclock.get(), proposedEpoch));
 
                         // 判断是否半数以上
@@ -1178,7 +1178,7 @@ public class FastLeaderElection implements Election {
                                 Vote endVote = new Vote(proposedLeader, proposedZxid, logicalclock.get(), proposedEpoch);
                                 // 停止选举
                                 leaveInstance(endVote);
-                                // 返回的最终的选票 vote， 设置到 currentVote
+                                // 返回的最终的选票 vote，设置到 currentVote
                                 return endVote;
                             }
                         }
