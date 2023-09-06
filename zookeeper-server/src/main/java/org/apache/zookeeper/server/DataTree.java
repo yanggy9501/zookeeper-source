@@ -61,8 +61,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * The tree maintains two parallel data structures: a hashtable that maps from
  * full paths to DataNodes and a tree of DataNodes. All accesses to a path is
  * through the hashtable. The tree is traversed only when serializing to disk.
- * zookeeper 数据的内存结构
  */
+/* xxx: zookeeper 数据的内存结构；zk 并没有按照真是树形结构来设计数据结构，其将所有的节点数据都存储在 Map 中，key 是 path 路径
+    value 是节点数据 DataNode，而 DataNode 中保存有该节点的子节点的 Path
+*/
 public class DataTree {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataTree.class);

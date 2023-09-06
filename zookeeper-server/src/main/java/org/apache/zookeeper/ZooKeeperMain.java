@@ -18,32 +18,9 @@
 
 package org.apache.zookeeper;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.apache.yetus.audience.InterfaceAudience;
 import org.apache.zookeeper.admin.ZooKeeperAdmin;
-import org.apache.zookeeper.cli.CliCommand;
-import org.apache.zookeeper.cli.CliException;
-import org.apache.zookeeper.cli.CommandFactory;
-import org.apache.zookeeper.cli.CommandNotFoundException;
-import org.apache.zookeeper.cli.MalformedCommandException;
+import org.apache.zookeeper.cli.*;
 import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.server.ExitCode;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
@@ -51,8 +28,20 @@ import org.apache.zookeeper.util.ServiceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
 /**
- * zookeeper 的 Java 客服端，需要配置启动参数 -server localhost:2181
+ * zookeeper 的 Java 客服端，需要配置启动参数（zk服务端地址） -server localhost:2181
  *
  * The command line client to ZooKeeper.
  *
@@ -61,7 +50,15 @@ import org.slf4j.LoggerFactory;
 public class ZooKeeperMain {
 
     private static final Logger LOG = LoggerFactory.getLogger(ZooKeeperMain.class);
+
+    /**
+     * 存放zookeeper支持的命令，key为命令关键字，value为命令参数
+     */
     static final Map<String, String> commandMap = new HashMap<String, String>();
+
+    /**
+     * 存放zookeeper的命令实例，每一个实例包括命令的名字、参数列表
+     */
     static final Map<String, CliCommand> commandMapCli = new HashMap<String, CliCommand>();
 
     protected MyCommandOptions cl = new MyCommandOptions();
@@ -70,6 +67,9 @@ public class ZooKeeperMain {
     protected boolean printWatches = true;
     protected int exitCode = ExitCode.EXECUTION_FINISHED.getValue();
 
+    /**
+     * 客户端实例，处理命令并将命令发送给服务器
+     */
     protected ZooKeeper zk;
     protected String host = "";
     private CountDownLatch connectLatch = null;
@@ -160,6 +160,8 @@ public class ZooKeeperMain {
         }
 
         /**
+         * 启动参数解析
+         *
          * Parses a command line that may contain one or more flags
          * before an optional command string
          * @param args command line arguments
@@ -253,6 +255,7 @@ public class ZooKeeperMain {
     }
 
     protected void connectToZK(String newHost) throws InterruptedException, IOException {
+        // 如果之前启动过 zk则先关闭旧的，在再次启动新的zk
         if (zk != null && zk.getState().isAlive()) {
             zk.close();
         }
@@ -280,6 +283,7 @@ public class ZooKeeperMain {
         }
 
         int timeout = Integer.parseInt(cl.getOption("timeout"));
+        // 客服端 ZooKeeper
         zk = new ZooKeeperAdmin(host, timeout, new MyWatcher(), readOnly, clientConfig);
         if (connectLatch != null) {
             if (!connectLatch.await(timeout, TimeUnit.MILLISECONDS)) {
@@ -291,6 +295,7 @@ public class ZooKeeperMain {
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        // 创建 ZooKeeperMain 并执行 run，等待命令输入，解析命令并发送服务端处理
         ZooKeeperMain main = new ZooKeeperMain(args);
         main.run();
     }
@@ -298,6 +303,7 @@ public class ZooKeeperMain {
     public ZooKeeperMain(String[] args) throws IOException, InterruptedException {
         cl.parseOptions(args);
         System.out.println("Connecting to " + cl.getOption("server"));
+        // 连接到服务端
         connectToZK(cl.getOption("server"));
     }
 
