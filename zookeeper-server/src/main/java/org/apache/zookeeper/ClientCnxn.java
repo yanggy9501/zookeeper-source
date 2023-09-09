@@ -229,6 +229,7 @@ public class ClientCnxn {
     /**
      * This class allows us to pass the headers and the relevant records around.
      */
+    /*xxx: 数据包 */
     static class Packet {
 
         RequestHeader requestHeader;
@@ -410,9 +411,10 @@ public class ClientCnxn {
 
     public void start() {
         // 启动两个线程 -> run 方法
-        /** 连接和读写数据 {@link SendThread#run} */
+        /** 连接 读写数据 {@link SendThread#run} */
         sendThread.start();
         // watcher 监听机制相关
+        /** {@link org.apache.zookeeper.ClientCnxn.EventThread#run} */
         eventThread.start();
     }
 
@@ -523,7 +525,7 @@ public class ClientCnxn {
                     if (event == eventOfDeath) {
                         wasKilled = true;
                     } else {
-                        // look that
+                        /*xxx：处理事件 */
                         processEvent(event);
                     }
                     if (wasKilled) {
@@ -549,7 +551,7 @@ public class ClientCnxn {
                     WatcherSetEventPair pair = (WatcherSetEventPair) event;
                     for (Watcher watcher : pair.watchers) {
                         try {
-                            // 回调
+                            // Watcher 的回调
                             watcher.process(pair.event);
                         } catch (Throwable t) {
                             LOG.error("Error while calling watcher.", t);
@@ -1118,7 +1120,7 @@ public class ClientCnxn {
             String hostPort = addr.getHostString() + ":" + addr.getPort();
             MDC.put("myid", hostPort);
             setName(getName().replaceAll("\\(.*\\)", "(" + hostPort + ")"));
-            // x
+            // 安全校验相关
             if (clientConfig.isSaslClientEnabled()) {
                 try {
                     if (zooKeeperSaslClient != null) {
@@ -1139,7 +1141,7 @@ public class ClientCnxn {
                 }
             }
             logStartConnect(addr);
-            // 走这
+            // 连接服务端，默认 nio，可以自己配置使用 netty
             clientCnxnSocket.connect(addr);
         }
 
@@ -1159,10 +1161,10 @@ public class ClientCnxn {
             long lastPingRwServer = Time.currentElapsedTime();
             final int MAX_SEND_PING_INTERVAL = 10000; //10 seconds
             InetSocketAddress serverAddress = null;
-            // 死循环监听和处理
+            // 死循环 监听和处理
             while (state.isAlive()) {
                 try {
-                    // 启动时没有连接走这
+                    // 启动时没有连接走这，进行连接
                     if (!clientCnxnSocket.isConnected()) {
                         // don't re-establish connection if we are closing
                         if (closing) {
@@ -1175,7 +1177,7 @@ public class ClientCnxn {
                             serverAddress = hostProvider.next(1000);
                         }
                         onConnecting(serverAddress);
-                        // 开始与服务端建立连接，关注连接事件
+                        /*xxx: 建立与服务端的连接，关注连接事件 */
                         startConnect(serverAddress);
                         // Update now to start the connection timer right after we make a connection attempt
                         clientCnxnSocket.updateNow();
@@ -1258,7 +1260,7 @@ public class ClientCnxn {
                         to = Math.min(to, pingRwTimeout - idlePingRwServer);
                     }
 
-                    // 连接建立后的读写监听和数据处理，ps：外层死循环
+                    /*xxx 连接建立后的读写监听和数据处理，ps：外层死循环 */
                     clientCnxnSocket.doTransport(to, pendingQueue, ClientCnxn.this);
                 } catch (Throwable e) {
                     if (closing) {
@@ -1549,7 +1551,7 @@ public class ClientCnxn {
         WatchRegistration watchRegistration,
         WatchDeregistration watchDeregistration) throws InterruptedException {
         ReplyHeader r = new ReplyHeader();
-        //  封装数据包
+        // 封装数据包
         Packet packet = queuePacket(
             h,
             r,
@@ -1661,7 +1663,7 @@ public class ClientCnxn {
                 if (h.getType() == OpCode.closeSession) {
                     closing = true;
                 }
-                // 入阻塞队列，读取：
+                // 入阻塞队列，等待处理
                 outgoingQueue.add(packet);
             }
         }

@@ -177,7 +177,7 @@ public class QuorumPeerMain {
             ServerCnxnFactory secureCnxnFactory = null;
 
             if (config.getClientPortAddress() != null) {
-                // 获取一个与 client 交互的 server 对象的创建工厂，用户创建 server 服务与 client 交互
+                /*xxx: 获取一个与 client 交互的 server 对象的创建工厂，用户创建 server 服务与 client 交互 */
                 cnxnFactory = ServerCnxnFactory.createFactory();
                 cnxnFactory.configure(config.getClientPortAddress(), config.getMaxClientCnxns(), config.getClientPortListenBacklog(), false);
             }

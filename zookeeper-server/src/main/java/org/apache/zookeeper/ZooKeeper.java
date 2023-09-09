@@ -93,8 +93,8 @@ import java.util.*;
  * by AutoCloseable (see: http://docs.oracle.com/javase/7/docs/api/java/lang/AutoCloseable.html#close()).
  * close() will never throw an InterruptedException but the exception remains in the
  * signature for backwards compatibility purposes.
- * zk 客户端
  */
+/*xxx  zk 客户端 */
 @SuppressWarnings("try")
 @InterfaceAudience.Public
 public class ZooKeeper implements AutoCloseable {
@@ -114,6 +114,9 @@ public class ZooKeeper implements AutoCloseable {
     @Deprecated
     public static final String SECURE_CLIENT = "zookeeper.client.secure";
 
+    /**
+     * zk 客服端连接
+     */
     protected final ClientCnxn cnxn;
     private static final Logger LOG;
 
@@ -606,6 +609,7 @@ public class ZooKeeper implements AutoCloseable {
             watcher,
             getClientCnxnSocket(),// 连接可以通过jvm参数指定netty -Dzookeeper.clientCnxnSocket=org.apache.zookeeper.ClientCnxnSocketNetty
             canBeReadOnly);
+
         /** {@link ClientCnxn#start} */
         cnxn.start();
     }
@@ -1279,12 +1283,11 @@ public class ZooKeeper implements AutoCloseable {
      * @throws KeeperException.InvalidACLException if the ACL is invalid, null, or empty
      * @throws InterruptedException if the transaction is interrupted
      * @throws IllegalArgumentException if an invalid path is specified
-     *
-     * 写数据
      */
+    /*xxx: 向服务端发送写数据 */
     public String create(
         final String path,
-        byte[] data,
+        byte[] data,// 数据
         List<ACL> acl,
         CreateMode createMode) throws KeeperException, InterruptedException {
         final String clientPath = path;
@@ -1303,7 +1306,7 @@ public class ZooKeeper implements AutoCloseable {
         request.setFlags(createMode.toFlag());
         request.setPath(serverPath);
         request.setAcl(acl);
-        //
+        // 提交请求到服务端
         ReplyHeader r = cnxn.submitRequest(h, request, response, null);
         if (r.getErr() != 0) {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);

@@ -373,7 +373,7 @@ public class NettyServerCnxn extends ServerCnxn {
                 appendToQueuedBuffer(buf.retainedDuplicate());
                 processQueuedBuffer();
             } else {
-                // 收消息
+                /*xxx: 接收消息 */
                 receiveMessage(buf);
                 // Have to check !closingChannel, because an error in
                 // receiveMessage() could have led to close() being called.
@@ -483,7 +483,7 @@ public class NettyServerCnxn extends ServerCnxn {
                         if (initialized) {
                             // TODO: if zks.processPacket() is changed to take a ByteBuffer[],
                             // we could implement zero-copy queueing.
-                            // 收取数据包
+                            /*xxx: 处理数据包*/
                             zks.processPacket(this, bb);
                         } else {
                             LOG.debug("got conn req request from {}", getRemoteSocketAddress());

@@ -101,7 +101,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
             }
         }
 
-        // 写事件
+        /*xxx: 写事件：从 outgoingQueue 阻塞队列中获取写数据的数据包 */
         if (sockKey.isWritable()) {
             Packet p = findSendablePacket(outgoingQueue, sendThread.tunnelAuthInProgress());
 
@@ -114,8 +114,10 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
                         && (p.requestHeader.getType() != OpCode.auth)) {
                         p.requestHeader.setXid(cnxn.getXid());
                     }
+                    // 封装 -> ByteBuffer
                     p.createBB();
                 }
+                // 发送到服务端，服务端在那里接收呢？-> ServerCnxnFactory.createFactory()
                 sock.write(p.bb);
                 if (!p.bb.hasRemaining()) {
                     sentCount.getAndIncrement();
@@ -314,6 +316,7 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
 
     @Override
     void packetAdded() {
+        /*xxx: 唤醒线程*/
         wakeupCnxn();
     }
 
@@ -323,7 +326,10 @@ public class ClientCnxnSocketNIO extends ClientCnxnSocket {
     }
 
     private synchronized void wakeupCnxn() {
-        // 唤醒 selector 线程
+        /**
+        * xxx: 唤醒 selector 线程, 在 clientCnxnSocket#doTransport 时 selector.select(waitTimeOut) 阻塞了，原理往channel写数据
+         * 从而 org.apache.zookeeper.ClientCnxnSocketNIO#doIO(java.util.Queue, org.apache.zookeeper.ClientCnxn)
+        */
         selector.wakeup();
     }
 

@@ -1110,7 +1110,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         }
         // 加载磁盘数据到内存
         loadDataBase();
-        // 启动网络通信服务，上一步已经创建 server 工厂，这里通过工厂创建 server 并启动以与 client 连接，默认 2181 端口
+        /*xxx: 启动网络通信服务，上一步已经创建 server，这里通过工厂创建 server 并启动以与 client 连接，默认 2181 端口 */
         startServerCnxnFactory();
         try {
             // Jetty server 默认8080，对外暴露 zk 状态信息（面向运维 api 接口）
@@ -2112,7 +2112,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
 
     private void startServerCnxnFactory() {
         if (cnxnFactory != null) {
-            // 网络通信服务 start
+            /*xxx: 网络通信服务 start, 绑定端口*/
             cnxnFactory.start();
         }
         // 有安全校验的走这个

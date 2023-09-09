@@ -60,6 +60,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+/*xxx: 客服端 client 与 服务端 server 通信的 */
 public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(NettyServerCnxnFactory.class);
@@ -182,9 +183,8 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
      * This is an inner class since we need to extend ChannelDuplexHandler, but
      * NettyServerCnxnFactory already extends ServerCnxnFactory. By making it inner
      * this class gets access to the member variables and methods.
-     *
-     * netty channel handler 处理来自 client 的数据请求
      */
+    /*xxx:  netty channel handler 处理来自 client 的数据请求 */
     @Sharable
     class CnxnChannelHandler extends ChannelDuplexHandler {
 
@@ -327,9 +327,10 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
             }
         }
 
-        /** 处理读事件（client 往 server 发送数据，server 读） */
+        /**xxx: 处理读事件（client 往 server 发送数据，server 读） */
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            // ps: zk 使用了堆外内存
             try {
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("message received called {}", msg);
@@ -340,7 +341,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
                     if (cnxn == null) {
                         LOG.error("channelRead() on a closed or closing NettyServerCnxn");
                     } else {
-                        // 处理数据
+                        /*xxx: 处理来自客服端的请求数据 */
                         cnxn.processMessage((ByteBuf) msg);
                     }
                 } catch (Exception ex) {
@@ -542,11 +543,13 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
                                                                  } else if (shouldUsePortUnification) {
                                                                      initSSL(pipeline, true);
                                                                  }
+                                                                 // 处理客服端数据的 handler
                                                                  pipeline.addLast("servercnxnfactory", channelHandler);
                                                              }
                                                          });
         this.bootstrap = configureBootstrapAllocator(bootstrap);
         this.bootstrap.validate();
+        // PS: 绑定端口，在调用 start 方法的时候绑定
     }
 
     private synchronized void initSSL(ChannelPipeline p, boolean supportPlaintext) throws X509Exception, KeyManagementException, NoSuchAlgorithmException {
