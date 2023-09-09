@@ -246,7 +246,7 @@ public class RequestThrottler extends ZooKeeperCriticalThread {
             dropRequest(request);
         } else {
             request.requestThrottleQueueTime = Time.currentElapsedTime();
-            // 提交到阻塞独立
+            // 入阻塞队列
             submittedRequests.add(request);
         }
     }
