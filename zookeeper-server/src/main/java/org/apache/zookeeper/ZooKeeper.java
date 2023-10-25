@@ -94,7 +94,7 @@ import java.util.*;
  * close() will never throw an InterruptedException but the exception remains in the
  * signature for backwards compatibility purposes.
  */
-/*xxx  zk 客户端 */
+/*xxx：zk 原生客户端 */
 @SuppressWarnings("try")
 @InterfaceAudience.Public
 public class ZooKeeper implements AutoCloseable {

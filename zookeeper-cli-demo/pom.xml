@@ -15,7 +15,7 @@
     </properties>
 
     <dependencies>
-        <!-- zookeeper client 保持和 zk 服务一致 -->
+        <!-- zookeeper 原生 client 保持和 zk 服务一致 -->
         <dependency>
             <groupId>org.apache.zookeeper</groupId>
             <artifactId>zookeeper</artifactId>

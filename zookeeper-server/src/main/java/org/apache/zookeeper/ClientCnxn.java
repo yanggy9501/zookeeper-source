@@ -1164,7 +1164,7 @@ public class ClientCnxn {
             // 死循环 监听和处理
             while (state.isAlive()) {
                 try {
-                    // 启动时没有连接走这，进行连接
+                    // 启动时没有连接则进行连接
                     if (!clientCnxnSocket.isConnected()) {
                         // don't re-establish connection if we are closing
                         if (closing) {
